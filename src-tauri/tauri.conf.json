@@ -17,7 +17,7 @@
         "title": "战网切号器",
         "width": 760,
         "height": 200,
-        "minWidth": 320,
+        "minWidth": 240,
         "minHeight": 64,
         "maxHeight": 680,
         "center": true,

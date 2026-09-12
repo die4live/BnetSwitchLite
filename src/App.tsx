@@ -17,10 +17,11 @@ import { userErrorMessage } from "@/lib/user-error"
 
 const MIN_WINDOW_HEIGHT = 64
 const MAX_WINDOW_HEIGHT = 680
-const MIN_WINDOW_WIDTH = 320
+// 窄窗口下工具栏只显示图标、账号行隐藏删除按钮，可以压到很小
+const MIN_WINDOW_WIDTH = 240
 const MAX_WINDOW_WIDTH = 1600
-// 底部工具栏高度（min-h-10），toast 贴在其上沿
-const TOOLBAR_HEIGHT = 40
+// toast 贴底并覆盖在底部工具栏上（与工具栏等高，min-h-10），左右不留边
+const TOAST_BOTTOM_OFFSET = 0
 
 function AppProviders({ children }: { children: React.ReactNode }) {
   return (
@@ -28,8 +29,8 @@ function AppProviders({ children }: { children: React.ReactNode }) {
       {children}
       <Toaster
         closeButton
-        mobileOffset={{ bottom: TOOLBAR_HEIGHT, left: 8, right: 8 }}
-        offset={{ bottom: TOOLBAR_HEIGHT, left: 8, right: 8 }}
+        mobileOffset={{ bottom: TOAST_BOTTOM_OFFSET, left: 0, right: 0 }}
+        offset={{ bottom: TOAST_BOTTOM_OFFSET, left: 0, right: 0 }}
         position="bottom-center"
       />
     </TooltipProvider>
@@ -326,10 +327,15 @@ export function App() {
 
   const confirmSwitch = async (account: AccountSnapshot) => {
     if (!(await ensureClient())) return
+    // 带上服务器信息，避免切错区域的同名账号
+    const target =
+      account.region.trim().length > 0
+        ? `${account.battleTag}（${account.region}）`
+        : account.battleTag
     const message =
       snapshot.client.status === "running"
-        ? `战网客户端会安全退出并切换到 ${account.battleTag}。`
-        : `将启动战网并切换到 ${account.battleTag}。`
+        ? `战网客户端会安全退出并切换到 ${target}。`
+        : `将启动战网并切换到 ${target}。`
     const confirmed = await appBridge.confirm(message, {
       okLabel: "切换",
     })

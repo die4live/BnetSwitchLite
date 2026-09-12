@@ -122,7 +122,7 @@ export function AccountList({
             variant="quiet"
           >
             <ExternalLink data-icon="inline-start" />
-            启动战网
+            <span className="toolbar-button-label">启动战网</span>
           </Button>
           <Button
             disabled={busy || loginSession !== null}
@@ -131,7 +131,7 @@ export function AccountList({
             variant="quiet"
           >
             <RefreshCw data-icon="inline-start" />
-            刷新账号
+            <span className="toolbar-button-label">刷新账号</span>
           </Button>
         </div>
 
@@ -145,7 +145,7 @@ export function AccountList({
             variant="quiet"
           >
             <FolderCog data-icon="inline-start" />
-            选择战网客户端
+            <span className="toolbar-button-label">选择战网客户端</span>
           </Button>
         </div>
       </div>

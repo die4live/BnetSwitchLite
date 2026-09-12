@@ -131,6 +131,7 @@ export function AccountRow({
               render={
                 <Button
                   aria-label={`移除 ${account.battleTag}`}
+                  className="account-row-delete"
                   disabled={busy}
                   onClick={onDelete}
                   size="icon-sm"

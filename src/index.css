@@ -242,6 +242,15 @@
   .account-row {
     gap: 0.5rem;
   }
+
+  /* 底部工具栏只留图标，收窄按钮内边距 */
+  .toolbar-button-label {
+    display: none;
+  }
+
+  .account-list-toolbar button {
+    padding-inline: 0.5rem;
+  }
 }
 
 @media (max-width: 360px) {
@@ -251,6 +260,15 @@
   }
 
   .account-row-name {
+    display: none;
+  }
+
+  /* 移除按钮让出宽度，切换/登录按钮独占操作区 */
+  .account-row-action {
+    grid-template-columns: 5.75rem;
+  }
+
+  .account-row-delete {
     display: none;
   }
 }
