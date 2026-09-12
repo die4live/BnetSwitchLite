@@ -25,6 +25,8 @@ jobs:
 
       - name: setup rust
         uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt # 门禁需要；不装则 cargo fmt/clippy 不存在
 
       - name: cache rust build
         uses: swatinem/rust-cache@v2
@@ -33,6 +35,30 @@ jobs:
 
       - name: install frontend dependencies
         run: npm ci
+
+      # ---- 质量门禁 ----
+      # 放在同一个 job 内：与后续 build 共用 target 目录和依赖缓存，
+      # 新建独立 job 会导致依赖被完整重编一次（Windows 上约 +15~20 分钟）。
+      # 任一门禁失败即中断，release job 因 needs 不会执行。
+      - name: "gate: typecheck"
+        run: npm run typecheck
+
+      - name: "gate: eslint"
+        run: npm run lint
+
+      - name: "gate: frontend format"
+        run: npx prettier --check "**/*.{ts,tsx}"
+
+      - name: "gate: rust format"
+        run: cargo fmt --manifest-path src-tauri/Cargo.toml --check
+
+      - name: "gate: clippy"
+        run: >
+          cargo clippy --manifest-path src-tauri/Cargo.toml --locked
+          --all-targets -- -D warnings
+
+      - name: "gate: tests"
+        run: cargo test --manifest-path src-tauri/Cargo.toml --locked
 
       - name: build app (single-file exe, no installer)
         run: npm run tauri -- build --no-bundle --ci
