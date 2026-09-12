@@ -1,0 +1,47 @@
+name: build-windows
+
+# 构建 Windows 免安装单文件 exe（无 NSIS / 无 MSI / 不提权）
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24 # docs/DEVELOPMENT.md:30 要求 Node 24
+          cache: npm
+
+      - name: setup rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: cache rust build
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - name: install frontend dependencies
+        run: npm ci
+
+      - name: build app (single-file exe, no installer)
+        run: npm run tauri -- build --no-bundle --ci
+
+      - name: package
+        run: npm run package:windows -- -Architecture x64
+
+      - name: upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: BnetSwitchLite-windows-x64
+          path: release/*.exe
+          if-no-files-found: error

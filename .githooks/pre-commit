@@ -1,0 +1,51 @@
+#!/bin/sh
+# 阻止本地凭据 / 构建产物进入 git。
+# 启用：git config core.hooksPath .githooks
+#
+# 两层检查：
+#   1) 路径黑名单  —— 挡住已知会含凭据或构建产物的路径
+#   2) 内容特征    —— 不管文件叫什么名字，内容出现 UnifiedAuth 就拦
+#
+# 注意：--no-verify 可绕过，别养成习惯。
+set -eu
+
+list=$(git diff --cached --name-only --diff-filter=ACM -z | tr '\0' '\n')
+
+# ── 1) 路径黑名单 ─────────────────────────────────────────
+blocked=$(printf '%s\n' "$list" | grep -Ei \
+  -e '(^|/)BnetSwitchLiteData/' \
+  -e '(^|/)Battle\.net' \
+  -e '(^|/)(payload|manifest)\.json$' \
+  -e '(^|/)\.env' \
+  -e '\.(exe|dll|msi|db|plist)$' \
+  || true)
+
+# ── 2) 内容特征：战网统一认证令牌 ─────────────────────────
+tmp=$(mktemp); trap 'rm -f "$tmp"' EXIT
+printf '%s\n' "$list" | while IFS= read -r f; do
+  [ -n "$f" ] || continue
+  # 二进制/字体直接跳过
+  case "$f" in *.png|*.ico|*.icns|*.woff*|*.ttf|*.svg) continue ;; esac
+  # 跳过本 hook 自身：脚本里就写着 UnifiedAuth 这个匹配串，否则会自己拦自己
+  case "$f" in .githooks/*) continue ;; esac
+  # 注意：必须写成 if，不能写 `grep && printf`。
+  # 在 set -e 下 grep 失配返回 1 会让脚本静默退出，提交被拒却看不到任何原因。
+  if git show ":$f" 2>/dev/null | grep -qi 'UnifiedAuth'; then
+    printf '  %s\n' "$f" >> "$tmp"
+  fi
+done
+content_hits=$(cat "$tmp")
+
+if [ -n "$blocked" ] || [ -n "$content_hits" ]; then
+  echo '' >&2
+  echo '❌ 提交被阻止：检测到可能含凭据或构建产物的文件' >&2
+  if [ -n "$blocked" ]; then
+    echo '' >&2; echo '命中路径黑名单：' >&2; echo "$blocked" >&2
+  fi
+  if [ -n "$content_hits" ]; then
+    echo '' >&2; echo '内容含 UnifiedAuth 令牌：' >&2; echo "$content_hits" >&2
+  fi
+  echo '' >&2
+  echo '确认是误报才可用 --no-verify 绕过（不要养成习惯）。' >&2
+  exit 1
+fi

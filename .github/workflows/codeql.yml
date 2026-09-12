@@ -1,0 +1,45 @@
+name: codeql
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: '23 5 * * 1'
+
+permissions:
+  contents: read
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+
+    permissions:
+      security-events: write
+
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [javascript-typescript, rust]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: setup rust
+        if: matrix.language == 'rust'
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: init codeql
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+          # Tauri 在 Linux 上完整编译需要 webkit2gtk 等系统库，
+          # 这里用 none 模式跳过构建步骤以规避环境依赖。
+          # 代价是对宏展开的分析覆盖略低，自用场景可接受。
+          build-mode: none
+
+      - name: analyze
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: '/language:${{ matrix.language }}'
