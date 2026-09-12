@@ -39,6 +39,13 @@ pub fn run() {
                 });
             }
             if let Some(window) = app.get_webview_window("main") {
+                // 标题栏带上 tauri.conf.json 的 version，版本号更新时无需改这里。
+                // 基准文案与 tauri.conf.json 的 app.windows[0].title 保持一致。
+                let title = match app.config().version.as_deref() {
+                    Some(version) if !version.is_empty() => format!("战网切号器 v{version}"),
+                    _ => "战网切号器".to_string(),
+                };
+                let _ = window.set_title(&title);
                 window.show()?;
             }
             Ok(())

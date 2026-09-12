@@ -532,7 +532,7 @@ fn cleanup_old_generations(generations_directory: &Path, active: &str) {
             Some((modified, entry.path()))
         })
         .collect::<Vec<_>>();
-    generations.sort_by(|left, right| right.0.cmp(&left.0));
+    generations.sort_by_key(|left| std::cmp::Reverse(left.0));
     for (_, path) in generations.into_iter().skip(1) {
         let _ = fs::remove_dir_all(path);
     }
