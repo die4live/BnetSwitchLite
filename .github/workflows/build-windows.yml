@@ -4,6 +4,7 @@ name: build-windows
 on:
   push:
     branches: [main]
+    tags: ['v*'] # 打 tag 时额外创建 release
   workflow_dispatch:
 
 permissions:
@@ -45,3 +46,48 @@ jobs:
           name: BnetSwitchLite-windows-x64
           path: release/*.exe
           if-no-files-found: error
+
+  # 仅 tag 推送时执行：把产物发成 release（artifact 90 天过期，release 永久保留）
+  release:
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: BnetSwitchLite-windows-x64
+          path: release
+
+      - name: compute sha256
+        id: hash
+        run: |
+          cd release
+          for f in *.exe; do
+            echo "filename=$f" >> "$GITHUB_OUTPUT"
+            echo "size=$(stat -c %s "$f")" >> "$GITHUB_OUTPUT"
+            echo "sha256=$(sha256sum "$f" | awk '{print toupper($1)}')" >> "$GITHUB_OUTPUT"
+          done
+
+      - name: create release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: release/*.exe
+          generate_release_notes: true
+          body: |
+            个人自用构建：Windows **免安装单文件** exe，双击即用，不写注册表、不提权。
+            未做代码签名——自用自构建不存在信任传递环节，不需要购买签名证书。
+
+            | 项目 | 值 |
+            |---|---|
+            | 文件 | `${{ steps.hash.outputs.filename }}` |
+            | 大小 | ${{ steps.hash.outputs.size }} 字节 |
+            | SHA-256 | `${{ steps.hash.outputs.sha256 }}` |
+
+            **运行依赖**：系统需已安装 WebView2 Runtime（Win11 自带；Win10 若首次运行报错请先装 Evergreen Runtime）。
+
+            ⚠️ **数据目录与 exe 同目录**（`BnetSwitchLiteData/`）。不要把 exe 放在桌面或文档——
+            Windows 默认把这两处纳入 OneDrive 同步，登录状态快照会跟着上云。建议放 `C:\Tools\BnetSwitchLite\`。
