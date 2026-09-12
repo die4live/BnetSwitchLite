@@ -2,7 +2,7 @@
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "productName": "BnetSwitchLite",
   "mainBinaryName": "BnetSwitchLite",
-  "version": "1.0.0-fork.1",
+  "version": "1.0.0-fork.2",
   "identifier": "io.github.bnetswitchlite.desktop",
   "build": {
     "frontendDist": "../dist",
@@ -17,7 +17,7 @@
         "title": "战网切号器",
         "width": 760,
         "height": 200,
-        "minWidth": 480,
+        "minWidth": 320,
         "minHeight": 64,
         "maxHeight": 680,
         "center": true,
