@@ -49,6 +49,8 @@ export interface AppSnapshot {
   dataDirectory: string
   client: ClientSnapshot
   accounts: AccountSnapshot[]
+  /** 战网当前登录的账号，已登录的账号不再作为可切换目标 */
+  currentAccountKey: AccountKey | null
   loginSession: LoginSessionSnapshot | null
   notice: string | null
   updatedAt: number

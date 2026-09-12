@@ -12,13 +12,15 @@ import {
   accountInitials,
   formatRelativeTime,
 } from "@/lib/format"
-import type { AccountSnapshot } from "@/lib/types"
+import type { AccountKey, AccountSnapshot } from "@/lib/types"
+import { accountKeysEqual } from "@/lib/types"
 import { cn } from "@/lib/utils"
 
 interface AccountRowProps {
   account: AccountSnapshot
   busy: boolean
   cancelLoginDisabled: boolean
+  currentAccountKey: AccountKey | null
   loginPending: boolean
   onCancelLogin: () => void
   onSwitch: () => void
@@ -30,12 +32,15 @@ export function AccountRow({
   account,
   busy,
   cancelLoginDisabled,
+  currentAccountKey,
   loginPending,
   onCancelLogin,
   onSwitch,
   onRelogin,
   onDelete,
 }: AccountRowProps) {
+  // 战网当前登录的就是这个账号时，它不再是切换目标
+  const isCurrentAccount = accountKeysEqual(account.key, currentAccountKey)
   const actionLabel =
     account.snapshotStatus === "expired" ? "重新登录" : "登录并保存"
   const snapshotDetail =
@@ -59,7 +64,7 @@ export function AccountRow({
         </AvatarFallback>
       </Avatar>
 
-      <div className="min-w-0">
+      <div className="account-row-name min-w-0">
         <h2 className="truncate text-sm leading-5 font-semibold">
           {account.battleTag}
         </h2>
@@ -102,11 +107,12 @@ export function AccountRow({
           {account.snapshotStatus === "ready" ? (
             <Button
               className="w-full"
-              disabled={busy}
+              disabled={busy || isCurrentAccount}
               onClick={onSwitch}
               size="sm"
+              variant={isCurrentAccount ? "surface-outline" : "default"}
             >
-              切换
+              {isCurrentAccount ? "已登录" : "切换"}
             </Button>
           ) : (
             <Button

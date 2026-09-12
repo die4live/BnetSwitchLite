@@ -17,8 +17,10 @@ import { userErrorMessage } from "@/lib/user-error"
 
 const MIN_WINDOW_HEIGHT = 64
 const MAX_WINDOW_HEIGHT = 680
-const MIN_WINDOW_WIDTH = 480
+const MIN_WINDOW_WIDTH = 320
 const MAX_WINDOW_WIDTH = 1600
+// 底部工具栏高度（min-h-10），toast 贴在其上沿
+const TOOLBAR_HEIGHT = 40
 
 function AppProviders({ children }: { children: React.ReactNode }) {
   return (
@@ -26,9 +28,9 @@ function AppProviders({ children }: { children: React.ReactNode }) {
       {children}
       <Toaster
         closeButton
-        mobileOffset={{ bottom: 52, left: 8, right: 8 }}
-        offset={{ bottom: 52, right: 12 }}
-        position="bottom-right"
+        mobileOffset={{ bottom: TOOLBAR_HEIGHT, left: 8, right: 8 }}
+        offset={{ bottom: TOOLBAR_HEIGHT, left: 8, right: 8 }}
+        position="bottom-center"
       />
     </TooltipProvider>
   )
@@ -388,6 +390,7 @@ export function App() {
             accounts={snapshot.accounts}
             busy={controller.busy}
             canCancelLogin={controller.canCancelLogin}
+            currentAccountKey={snapshot.currentAccountKey}
             loginSession={session}
             onCancelLogin={() => {
               if (session) void controller.cancelLogin(session.id)

@@ -24,6 +24,8 @@ const Toaster = ({ toastOptions, ...props }: ToasterProps) => {
       }}
       style={
         {
+          // 宽度跟随容器（工具栏上方整条），不再用默认 356px 卡片宽度
+          "--width": "100%",
           "--normal-bg": "var(--popover)",
           "--normal-text": "var(--popover-foreground)",
           "--normal-border": "var(--border)",

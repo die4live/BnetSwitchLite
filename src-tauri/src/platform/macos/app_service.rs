@@ -174,6 +174,7 @@ impl MacosPlatformService {
             .map(is_main_client_running)
             .transpose()?
             .unwrap_or(false);
+        let current_account_key = catalog.current_account_key.clone();
         let accounts = account_snapshots(catalog.accounts, &self.hidden_accounts, |key| match self
             .snapshots
             .summary(key)
@@ -209,6 +210,7 @@ impl MacosPlatformService {
                     && client.is_some(),
             },
             accounts,
+            current_account_key,
             login_session: self.recovery.login_snapshot()?,
             notice: self
                 .startup_notice

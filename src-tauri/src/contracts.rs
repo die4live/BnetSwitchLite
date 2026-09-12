@@ -61,6 +61,8 @@ pub struct AppSnapshot {
     pub data_directory: String,
     pub client: ClientSnapshot,
     pub accounts: Vec<AccountSnapshot>,
+    /// 战网当前登录的账号；用于让已登录账号不再显示为可切换目标。
+    pub current_account_key: Option<AccountKey>,
     pub login_session: Option<LoginSessionSnapshot>,
     pub notice: Option<String>,
     pub updated_at: u64,

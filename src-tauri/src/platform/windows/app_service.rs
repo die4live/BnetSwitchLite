@@ -128,6 +128,7 @@ impl WindowsPlatformService {
             }
             Err(error) => (Default::default(), Some(error.to_string())),
         };
+        let current_account_key = catalog.current_account_key.clone();
         let client_path = self.resolved_client_path();
         let running = is_main_client_running()?;
         let accounts = account_snapshots(catalog.accounts, &self.hidden_accounts, |key| match self
@@ -166,6 +167,7 @@ impl WindowsPlatformService {
                     && client_path.is_some(),
             },
             accounts,
+            current_account_key,
             login_session: self.login_sessions.snapshot()?,
             notice: self.startup_notice.clone().or(read_notice),
             updated_at: now_epoch_ms(),

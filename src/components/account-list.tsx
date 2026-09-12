@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/empty"
 import { Separator } from "@/components/ui/separator"
 import type {
+  AccountKey,
   AccountSnapshot,
   LoginSessionSnapshot,
   OperationEvent,
@@ -22,6 +23,7 @@ interface AccountListProps {
   loginSession: LoginSessionSnapshot | null
   busy: boolean
   canCancelLogin: boolean
+  currentAccountKey: AccountKey | null
   onRefresh: () => void
   onConfigurePath: () => void
   onOpenClient: () => void
@@ -37,6 +39,7 @@ export function AccountList({
   loginSession,
   busy,
   canCancelLogin,
+  currentAccountKey,
   onRefresh,
   onConfigurePath,
   onOpenClient,
@@ -61,13 +64,20 @@ export function AccountList({
           data-account-rows-content
         >
           {accounts.length === 0 ? (
-            <Empty className="h-16 max-h-16 min-h-16 p-2">
+            <Empty className="min-h-16 p-2">
               <EmptyHeader className="max-w-none flex-row gap-2">
                 <EmptyMedia className="mb-0 text-muted-foreground">
                   <UserRound className="size-[18px]" />
                 </EmptyMedia>
                 <EmptyTitle>未发现账号</EmptyTitle>
               </EmptyHeader>
+              <ol className="w-full space-y-1 px-2 pb-1 text-left text-xs leading-5 text-muted-foreground">
+                <li>
+                  1. 点底部「选择战网客户端」，定位到 Battle.net.exe
+                </li>
+                <li>2. 点「启动战网」，在登录界面登录你要保存的账号</li>
+                <li>3. 回到本工具点「刷新账号」，登录状态即自动保存</li>
+              </ol>
             </Empty>
           ) : (
             <div className="divide-y" role="list">
@@ -86,6 +96,7 @@ export function AccountList({
                       account={account}
                       busy={busy || loginSession !== null}
                       cancelLoginDisabled={!canCancelLogin}
+                      currentAccountKey={currentAccountKey}
                       loginPending={loginPending}
                       onCancelLogin={onCancelLogin}
                       onDelete={() => onDelete(account)}
