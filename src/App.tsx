@@ -57,9 +57,7 @@ function useAdaptiveWindow(layoutKey: string | null) {
         if (cancelled) return
 
         const waitForLayout = () =>
-          new Promise<void>((resolve) =>
-            requestAnimationFrame(() => resolve())
-          )
+          new Promise<void>((resolve) => requestAnimationFrame(() => resolve()))
 
         const appWindow = getCurrentWindow()
         await appWindow.setMinSize(
@@ -113,7 +111,8 @@ function useAdaptiveWindow(layoutKey: string | null) {
           rowsContentRect && accountRows.length > 0
             ? Math.max(
                 ...accountRows.map(
-                  (row) => row.getBoundingClientRect().bottom - rowsContentRect.top
+                  (row) =>
+                    row.getBoundingClientRect().bottom - rowsContentRect.top
                 )
               ) + rowsContentBorderBottom
             : 0
@@ -145,23 +144,17 @@ function useAdaptiveWindow(layoutKey: string | null) {
           const fixedHeight =
             stagePadding + separator!.offsetHeight + toolbar!.offsetHeight
           const availableRowsHeight = MAX_WINDOW_HEIGHT - fixedHeight
-          const lastCompleteRow = accountRows.findLast(
-            (row) => {
-              const cardTop = rowsContentRect?.top ?? 0
-              const rowBottom = row.getBoundingClientRect().bottom - cardTop
-              return (
-                rowBottom + rowsContentBorderBottom <= availableRowsHeight
-              )
-            }
-          )
+          const lastCompleteRow = accountRows.findLast((row) => {
+            const cardTop = rowsContentRect?.top ?? 0
+            const rowBottom = row.getBoundingClientRect().bottom - cardTop
+            return rowBottom + rowsContentBorderBottom <= availableRowsHeight
+          })
           if (lastCompleteRow) {
             const cardTop = rowsContentRect?.top ?? 0
             const lastRowBottom =
               lastCompleteRow.getBoundingClientRect().bottom - cardTop
             maximumHeight = Math.ceil(
-              fixedHeight +
-                lastRowBottom +
-                rowsContentBorderBottom
+              fixedHeight + lastRowBottom + rowsContentBorderBottom
             )
           }
         }
@@ -170,9 +163,7 @@ function useAdaptiveWindow(layoutKey: string | null) {
           Math.min(maximumHeight, naturalHeight)
         )
         const minimumHeight =
-          naturalHeight <= MAX_WINDOW_HEIGHT
-            ? targetHeight
-            : MIN_WINDOW_HEIGHT
+          naturalHeight <= MAX_WINDOW_HEIGHT ? targetHeight : MIN_WINDOW_HEIGHT
         const finalMaximumHeight = Math.max(maximumHeight, targetHeight)
         const [innerSize, outerPosition, outerSize, scaleFactor] =
           await Promise.all([

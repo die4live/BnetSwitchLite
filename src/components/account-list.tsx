@@ -72,9 +72,7 @@ export function AccountList({
                 <EmptyTitle>未发现账号</EmptyTitle>
               </EmptyHeader>
               <ol className="w-full space-y-1 px-2 pb-1 text-left text-xs leading-5 text-muted-foreground">
-                <li>
-                  1. 点底部「选择战网客户端」，定位到 Battle.net.exe
-                </li>
+                <li>1. 点底部「选择战网客户端」，定位到 Battle.net.exe</li>
                 <li>2. 点「启动战网」，在登录界面登录你要保存的账号</li>
                 <li>3. 回到本工具点「刷新账号」，登录状态即自动保存</li>
               </ol>
@@ -118,9 +116,7 @@ export function AccountList({
       >
         <div className="col-start-1 flex items-center gap-0.5 justify-self-start">
           <Button
-            disabled={
-              busy || loginSession !== null
-            }
+            disabled={busy || loginSession !== null}
             onClick={onOpenClient}
             size="sm"
             variant="quiet"
@@ -129,9 +125,7 @@ export function AccountList({
             启动战网
           </Button>
           <Button
-            disabled={
-              busy || loginSession !== null
-            }
+            disabled={busy || loginSession !== null}
             onClick={onRefresh}
             size="sm"
             variant="quiet"
@@ -145,9 +139,7 @@ export function AccountList({
 
         <div className="col-start-3 flex items-center gap-0.5 justify-self-end">
           <Button
-            disabled={
-              busy || loginSession !== null
-            }
+            disabled={busy || loginSession !== null}
             onClick={onConfigurePath}
             size="sm"
             variant="quiet"
