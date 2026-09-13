@@ -50,7 +50,8 @@ fn state_path() -> Option<&'static Path> {
     .as_deref()
 }
 
-fn save_now(window: &WebviewWindow) {
+/// 立即落盘一次。关闭窗口时调用，保证最后一次位置/尺寸不丢。
+pub fn save_now(window: &WebviewWindow) {
     if window.is_minimized().unwrap_or(true) {
         return;
     }
