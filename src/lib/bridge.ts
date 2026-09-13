@@ -2,6 +2,7 @@ import { Channel, invoke, isTauri } from "@tauri-apps/api/core"
 
 import type {
   AccountKey,
+  AccountSnapshot,
   AppSnapshot,
   LoginIntent,
   LoginCompletionResult,
@@ -43,7 +44,7 @@ async function callWithEvents<T = AppSnapshot>(
   return invoke<T>(command, { ...args, onEvent: channel })
 }
 
-export const appBridge = {
+const desktopBridge = {
   load: (onEvent: EventHandler) =>
     callWithEvents("get_app_snapshot", {}, onEvent),
   refresh: () => call<AppSnapshot>("refresh_accounts"),
@@ -91,20 +92,101 @@ export const appBridge = {
       ],
     })
   },
-  confirm: async (
-    message: string,
-    options: {
-      kind?: "info" | "warning" | "error"
-      okLabel?: string
-    }
-  ) => {
-    requireDesktop()
-    const { confirm } = await import("@tauri-apps/plugin-dialog")
-    return confirm(message, {
-      title: "战网切号器",
-      kind: options.kind,
-      okLabel: options.okLabel ?? "继续",
-      cancelLabel: "取消",
-    })
-  },
 }
+
+/**
+ * 浏览器预览模式：`npm run dev` 后直接用浏览器打开，用假数据渲染完整界面，
+ * 便于用 devtools 检查布局和元素（Tauri 运行时不会走到这里）。
+ */
+function previewSnapshot(): AppSnapshot {
+  const now = Date.now()
+  const accounts: AccountSnapshot[] = [
+    {
+      key: { environment: "kr.actual.battle.net", accountId: "1001" },
+      id: "acc-1001",
+      battleTag: "亚服一号#3456",
+      region: "KR",
+      environment: "kr.actual.battle.net",
+      snapshotStatus: "ready",
+      lastSavedAt: now - 3 * 60 * 60 * 1000,
+      note: null,
+    },
+    {
+      key: { environment: "cn.actual.battlenet.com.cn", accountId: "1002" },
+      id: "acc-1002",
+      battleTag: "国服玩家#7788",
+      region: "CN",
+      environment: "cn.actual.battlenet.com.cn",
+      snapshotStatus: "ready",
+      lastSavedAt: now - 26 * 60 * 60 * 1000,
+      note: null,
+    },
+    {
+      key: { environment: "us.actual.battle.net", accountId: "1003" },
+      id: "acc-1003",
+      battleTag: "ExpiredPlayer#9012",
+      region: "US",
+      environment: "us.actual.battle.net",
+      snapshotStatus: "expired",
+      lastSavedAt: now - 40 * 24 * 60 * 60 * 1000,
+      note: null,
+    },
+  ]
+
+  return {
+    appName: "BnetSwitchLite",
+    version: "1.0.2",
+    mode: "desktop",
+    platform: "windows",
+    dataDirectory: "C:\\Tools\\BnetSwitchLite\\BnetSwitchLiteData",
+    client: {
+      status: "running",
+      executablePath: "C:\\Program Files (x86)\\Battle.net\\Battle.net.exe",
+      detectedAutomatically: true,
+    },
+    accounts,
+    currentAccountKey: {
+      environment: "cn.actual.battlenet.com.cn",
+      accountId: "1002",
+    },
+    loginSession: null,
+    notice: null,
+    updatedAt: now,
+  }
+}
+
+const browserPreviewBridge: typeof desktopBridge = {
+  load: (onEvent) => {
+    onEvent({
+      kind: "recovery",
+      phase: "starting",
+      title: "正在检查本地状态",
+      detail: "预览模式：假数据",
+      progress: 100,
+    })
+    return Promise.resolve(previewSnapshot())
+  },
+  refresh: () => Promise.resolve(previewSnapshot()),
+  switchAccount: (_accountKey, onEvent) => {
+    onEvent({
+      kind: "switch",
+      phase: "restoring",
+      title: "正在切换",
+      detail: "预览模式：不会真的切换",
+      progress: 100,
+    })
+    return Promise.resolve(previewSnapshot())
+  },
+  beginLogin: () => Promise.resolve(previewSnapshot()),
+  completeLogin: () =>
+    Promise.resolve({ snapshot: previewSnapshot(), cancelled: false }),
+  requestLoginCancellation: () =>
+    Promise.resolve<LoginCancellationStatus>("accepted"),
+  cancelLogin: () => Promise.resolve(previewSnapshot()),
+  removeAccount: () => Promise.resolve(previewSnapshot()),
+  setClientPath: () => Promise.resolve(previewSnapshot()),
+  openClient: () => Promise.resolve(previewSnapshot()),
+  pickClientExecutable: () => Promise.resolve(null),
+}
+
+export const appBridge = isTauri() ? desktopBridge : browserPreviewBridge

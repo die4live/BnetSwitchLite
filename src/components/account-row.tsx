@@ -1,3 +1,4 @@
+import * as React from "react"
 import { Trash2, X } from "lucide-react"
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
@@ -50,6 +51,29 @@ export function AccountRow({
         ? "登录已失效"
         : "尚未保存"
 
+  // 窄窗口（≤360px）账号信息会被 CSS 隐藏，此时头像上给出快速提示
+  const [compact, setCompact] = React.useState(false)
+  const [tipOpen, setTipOpen] = React.useState(false)
+  React.useEffect(() => {
+    const query = window.matchMedia("(max-width: 360px)")
+    const update = () => {
+      setCompact(query.matches)
+      // 离开窄窗口后提示不再有意义，顺手收掉，避免状态残留
+      if (!query.matches) setTipOpen(false)
+    }
+    update()
+    query.addEventListener("change", update)
+    return () => query.removeEventListener("change", update)
+  }, [])
+
+  const avatar = (
+    <Avatar size="lg">
+      <AvatarFallback tone={accountAvatarTone(account.id)}>
+        {accountInitials(account.battleTag)}
+      </AvatarFallback>
+    </Avatar>
+  )
+
   return (
     <article
       aria-busy={loginPending || undefined}
@@ -58,11 +82,31 @@ export function AccountRow({
         loginPending && "bg-muted/30 hover:bg-muted/30"
       )}
     >
-      <Avatar size="lg">
-        <AvatarFallback tone={accountAvatarTone(account.id)}>
-          {accountInitials(account.battleTag)}
-        </AvatarFallback>
-      </Avatar>
+      {compact ? (
+        <Tooltip open={tipOpen} onOpenChange={setTipOpen}>
+          <TooltipTrigger
+            closeDelay={0}
+            closeOnClick={false}
+            delay={60}
+            render={
+              <span
+                className="cursor-default"
+                onClick={() => setTipOpen((open) => !open)}
+              />
+            }
+          >
+            {avatar}
+          </TooltipTrigger>
+          <TooltipContent className="flex-col items-start gap-0.5" side="right">
+            <span className="font-semibold">{account.battleTag}</span>
+            <span className="opacity-80">
+              {account.region} · {snapshotDetail}
+            </span>
+          </TooltipContent>
+        </Tooltip>
+      ) : (
+        avatar
+      )}
 
       <div className="account-row-name min-w-0">
         <h2 className="truncate text-sm leading-5 font-semibold">

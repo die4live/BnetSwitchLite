@@ -203,7 +203,9 @@
 
   body {
     @apply bg-background text-foreground antialiased;
-    min-width: 320px;
+    /* 必须小于窗口最小宽度（180px），否则窄窗口下 body 撑宽、
+       右侧内容（切换按钮、工具栏右侧图标）会被整块裁掉 */
+    min-width: 160px;
     min-height: 100vh;
     overflow: hidden;
   }
@@ -217,11 +219,23 @@
   .account-row {
     animation: account-row-enter 180ms ease-out both;
   }
+}
 
-  /* 通知条与底部工具栏等高（min-h-10），内容多时自然增高 */
-  .cn-toast {
-    min-height: 2.5rem;
-  }
+/* 通知条与底部工具栏等高（工具栏 min-h-10 = 2.5rem）。
+   必须写在 @layer 之外：sonner 的样式是 JS 运行时注入的「未分层」样式，
+   而未分层样式在层叠中优先于任何 @layer 内的规则——哪怕我们把选择器特异性
+   提到 (0,2,1) 也压不住它的 padding: 16px（之前 height 能生效只是因为
+   sonner 没设 height）。去掉上下 16px 内边距，内容才能在 40px 内居中不裁切。 */
+li[data-sonner-toast].cn-toast {
+  height: 2.5rem;
+  min-height: 2.5rem;
+  padding-block: 0;
+  overflow: hidden;
+}
+
+li[data-sonner-toast].cn-toast [data-content] {
+  font-size: 12px;
+  line-height: 1.35;
 }
 
 @keyframes account-row-enter {
@@ -237,7 +251,8 @@
 }
 
 /* 窄窗口逐级让位：先收紧列间距，再收起账号名，只留头像 + 操作按钮。
-   物理下限约 196px（padding 24 + 头像 36 + 间距 12 + 操作区 124）。 */
+   物理下限约 178px（外层内边距 16 + 卡片边框 2 + 行内边距 24 + 头像 36 + 间距 8 + 切换按钮 92），
+   窗口最小宽度即取该下限（App.tsx MIN_WINDOW_WIDTH = 180）。 */
 @media (max-width: 420px) {
   .account-row {
     gap: 0.5rem;

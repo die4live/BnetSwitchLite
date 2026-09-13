@@ -6,6 +6,7 @@ import { toast } from "sonner"
 
 import { AccountList } from "@/components/account-list"
 import { AppErrorState, AppSkeleton } from "@/components/app-states"
+import { ConfirmProvider, useConfirm } from "@/components/ui/confirm-dialog"
 import { Toaster } from "@/components/ui/sonner"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { useAppController } from "@/hooks/use-app-controller"
@@ -17,8 +18,9 @@ import { userErrorMessage } from "@/lib/user-error"
 
 const MIN_WINDOW_HEIGHT = 64
 const MAX_WINDOW_HEIGHT = 680
-// 窄窗口下工具栏只显示图标、账号行隐藏删除按钮，可以压到很小
-const MIN_WINDOW_WIDTH = 240
+// 窄窗口下工具栏只显示图标、账号行隐藏删除按钮。
+// 物理下限 ≈ 178px：外层内边距 16 + 卡片边框 2 + 行内边距 24 + 头像 36 + 间距 8 + 切换按钮 92
+const MIN_WINDOW_WIDTH = 180
 const MAX_WINDOW_WIDTH = 1600
 // toast 贴底并覆盖在底部工具栏上（与工具栏等高，min-h-10），左右不留边
 const TOAST_BOTTOM_OFFSET = 0
@@ -26,13 +28,14 @@ const TOAST_BOTTOM_OFFSET = 0
 function AppProviders({ children }: { children: React.ReactNode }) {
   return (
     <TooltipProvider delay={350}>
-      {children}
-      <Toaster
-        closeButton
-        mobileOffset={{ bottom: TOAST_BOTTOM_OFFSET, left: 0, right: 0 }}
-        offset={{ bottom: TOAST_BOTTOM_OFFSET, left: 0, right: 0 }}
-        position="bottom-center"
-      />
+      <ConfirmProvider>
+        {children}
+        <Toaster
+          mobileOffset={{ bottom: TOAST_BOTTOM_OFFSET, left: 8, right: 8 }}
+          offset={{ bottom: TOAST_BOTTOM_OFFSET, left: 8, right: 8 }}
+          position="bottom-center"
+        />
+      </ConfirmProvider>
     </TooltipProvider>
   )
 }
@@ -259,6 +262,15 @@ function useAdaptiveWindow(layoutKey: string | null) {
 }
 
 export function App() {
+  return (
+    <AppProviders>
+      <AppContent />
+    </AppProviders>
+  )
+}
+
+function AppContent() {
+  const confirm = useConfirm()
   const controller = useAppController()
   const snapshot = controller.snapshot
   const shownNoticeRef = React.useRef<string | null>(null)
@@ -283,21 +295,15 @@ export function App() {
   }, [snapshot?.notice, snapshot?.accounts.length])
 
   if (controller.loading) {
-    return (
-      <AppProviders>
-        <AppSkeleton operation={controller.operation} />
-      </AppProviders>
-    )
+    return <AppSkeleton operation={controller.operation} />
   }
 
   if (!snapshot) {
     return (
-      <AppProviders>
-        <AppErrorState
-          message={controller.loadError ?? "请重新启动战网切号器"}
-          onRetry={controller.reload}
-        />
-      </AppProviders>
+      <AppErrorState
+        message={controller.loadError ?? "请重新启动战网切号器"}
+        onRetry={controller.reload}
+      />
     )
   }
 
@@ -336,9 +342,7 @@ export function App() {
       snapshot.client.status === "running"
         ? `战网客户端会安全退出并切换到 ${target}。`
         : `将启动战网并切换到 ${target}。`
-    const confirmed = await appBridge.confirm(message, {
-      okLabel: "切换",
-    })
+    const confirmed = await confirm(message, { okLabel: "切换" })
     if (confirmed) {
       void controller.switchAccount(account.key, account.battleTag)
     }
@@ -350,12 +354,9 @@ export function App() {
   }
 
   const confirmRemove = async (account: AccountSnapshot) => {
-    const confirmed = await appBridge.confirm(
+    const confirmed = await confirm(
       `将从战网切号器中移除 ${account.battleTag}，并删除本地保存的登录状态。`,
-      {
-        kind: "warning",
-        okLabel: "移除",
-      }
+      { danger: true, okLabel: "移除" }
     )
     if (confirmed) {
       void controller.removeAccount(account.key, account.battleTag)
@@ -368,46 +369,42 @@ export function App() {
       snapshot.client.status === "running"
         ? "战网客户端会安全退出，然后打开登录界面。"
         : "将启动战网登录界面。"
-    const confirmed = await appBridge.confirm(message, {
-      okLabel: "开始登录",
-    })
+    const confirmed = await confirm(message, { okLabel: "开始登录" })
     if (confirmed) void controller.beginLogin(intent)
   }
 
   const session = snapshot.loginSession
 
   return (
-    <AppProviders>
-      <div
-        className="app-shell flex h-svh flex-col bg-card text-foreground"
-        data-window-content
-      >
-        <main className="flex min-h-0 flex-1">
-          <AccountList
-            accounts={snapshot.accounts}
-            busy={controller.busy}
-            canCancelLogin={controller.canCancelLogin}
-            currentAccountKey={snapshot.currentAccountKey}
-            loginSession={session}
-            onCancelLogin={() => {
-              if (session) void controller.cancelLogin(session.id)
-            }}
-            onConfigurePath={() => void configureClient()}
-            onOpenClient={() => void controller.openClient()}
-            onDelete={(account) => void confirmRemove(account)}
-            onRefresh={() => void refreshAccounts()}
-            onRelogin={(account) =>
-              void beginLogin({
-                kind: "reauthenticate",
-                accountKey: account.key,
-              })
-            }
-            onSwitch={(account) => void confirmSwitch(account)}
-            operation={controller.operation}
-          />
-        </main>
-      </div>
-    </AppProviders>
+    <div
+      className="app-shell flex h-svh flex-col bg-card text-foreground"
+      data-window-content
+    >
+      <main className="flex min-h-0 flex-1">
+        <AccountList
+          accounts={snapshot.accounts}
+          busy={controller.busy}
+          canCancelLogin={controller.canCancelLogin}
+          currentAccountKey={snapshot.currentAccountKey}
+          loginSession={session}
+          onCancelLogin={() => {
+            if (session) void controller.cancelLogin(session.id)
+          }}
+          onConfigurePath={() => void configureClient()}
+          onOpenClient={() => void controller.openClient()}
+          onDelete={(account) => void confirmRemove(account)}
+          onRefresh={() => void refreshAccounts()}
+          onRelogin={(account) =>
+            void beginLogin({
+              kind: "reauthenticate",
+              accountKey: account.key,
+            })
+          }
+          onSwitch={(account) => void confirmSwitch(account)}
+          operation={controller.operation}
+        />
+      </main>
+    </div>
   )
 }
 

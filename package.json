@@ -1,7 +1,7 @@
 {
   "name": "bnetswitchlite",
   "private": true,
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "A local-first Battle.net account switcher: save once, switch cleanly on Windows and macOS.",
   "license": "MIT",
   "type": "module",
@@ -10,7 +10,7 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "format": "prettier --write \"**/*.{ts,tsx}\"",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit -p tsconfig.app.json && tsc --noEmit -p tsconfig.node.json",
     "preview": "vite preview",
     "tauri": "tauri",
     "bundle:macos:arm64": "tauri build --target aarch64-apple-darwin --bundles app --ci",
