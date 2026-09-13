@@ -9,10 +9,12 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import {
-  accountAvatarTone,
   accountInitials,
+  accountRegionTone,
   formatRelativeTime,
 } from "@/lib/format"
+import { COMPACT_ACCOUNT_QUERY } from "@/lib/breakpoints"
+import { useMediaQuery } from "@/hooks/use-media-query"
 import type { AccountKey, AccountSnapshot } from "@/lib/types"
 import { accountKeysEqual } from "@/lib/types"
 import { cn } from "@/lib/utils"
@@ -51,24 +53,15 @@ export function AccountRow({
         ? "登录已失效"
         : "尚未保存"
 
-  // 窄窗口（≤360px）账号信息会被 CSS 隐藏，此时头像上给出快速提示
-  const [compact, setCompact] = React.useState(false)
+  // 窄窗口（≤360px）账号信息会被 CSS 隐藏，此时头像上给出快速提示。
+  // 离开窄窗口时 Tooltip 触发器卸载，Base UI 会自己收掉并回调 onOpenChange，
+  // 这里不需要额外的副作用清理。
+  const compact = useMediaQuery(COMPACT_ACCOUNT_QUERY)
   const [tipOpen, setTipOpen] = React.useState(false)
-  React.useEffect(() => {
-    const query = window.matchMedia("(max-width: 360px)")
-    const update = () => {
-      setCompact(query.matches)
-      // 离开窄窗口后提示不再有意义，顺手收掉，避免状态残留
-      if (!query.matches) setTipOpen(false)
-    }
-    update()
-    query.addEventListener("change", update)
-    return () => query.removeEventListener("change", update)
-  }, [])
 
   const avatar = (
     <Avatar size="lg">
-      <AvatarFallback tone={accountAvatarTone(account.id)}>
+      <AvatarFallback tone={accountRegionTone(account.region)}>
         {accountInitials(account.battleTag)}
       </AvatarFallback>
     </Avatar>
@@ -91,6 +84,7 @@ export function AccountRow({
             render={
               <span
                 className="cursor-default"
+                data-no-drag=""
                 onClick={() => setTipOpen((open) => !open)}
               />
             }
@@ -108,7 +102,8 @@ export function AccountRow({
         avatar
       )}
 
-      <div className="account-row-name min-w-0">
+      {/* 账号名区域保留文字选择，不参与窗口拖动 */}
+      <div className="account-row-name min-w-0" data-no-drag="">
         <h2 className="truncate text-sm leading-5 font-semibold">
           {account.battleTag}
         </h2>

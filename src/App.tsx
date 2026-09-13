@@ -10,6 +10,7 @@ import { ConfirmProvider, useConfirm } from "@/components/ui/confirm-dialog"
 import { Toaster } from "@/components/ui/sonner"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { useAppController } from "@/hooks/use-app-controller"
+import { useWindowDrag } from "@/hooks/use-window-drag"
 import { appBridge } from "@/lib/bridge"
 import { ATTENTION_TOAST_DURATION, createToastOptions } from "@/lib/toast"
 import type { AccountSnapshot, LoginIntent } from "@/lib/types"
@@ -26,17 +27,22 @@ const MAX_WINDOW_WIDTH = 1600
 const TOAST_BOTTOM_OFFSET = 0
 
 function AppProviders({ children }: { children: React.ReactNode }) {
+  // display: contents 的包裹层只用来接收指针事件，不参与布局；
+  // 挂在最外层，加载中/出错态也能拖动窗口
+  const dragSurfaceRef = useWindowDrag<HTMLDivElement>()
   return (
-    <TooltipProvider delay={350}>
-      <ConfirmProvider>
-        {children}
-        <Toaster
-          mobileOffset={{ bottom: TOAST_BOTTOM_OFFSET, left: 8, right: 8 }}
-          offset={{ bottom: TOAST_BOTTOM_OFFSET, left: 8, right: 8 }}
-          position="bottom-center"
-        />
-      </ConfirmProvider>
-    </TooltipProvider>
+    <div className="contents" ref={dragSurfaceRef}>
+      <TooltipProvider delay={350}>
+        <ConfirmProvider>
+          {children}
+          <Toaster
+            mobileOffset={{ bottom: TOAST_BOTTOM_OFFSET, left: 8, right: 8 }}
+            offset={{ bottom: TOAST_BOTTOM_OFFSET, left: 8, right: 8 }}
+            position="bottom-center"
+          />
+        </ConfirmProvider>
+      </TooltipProvider>
+    </div>
   )
 }
 

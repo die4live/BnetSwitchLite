@@ -100,12 +100,13 @@ const desktopBridge = {
  */
 function previewSnapshot(): AppSnapshot {
   const now = Date.now()
+  // region 用后端 region_label 的真实文案，头像配色按它取值
   const accounts: AccountSnapshot[] = [
     {
       key: { environment: "kr.actual.battle.net", accountId: "1001" },
       id: "acc-1001",
       battleTag: "亚服一号#3456",
-      region: "KR",
+      region: "亚服",
       environment: "kr.actual.battle.net",
       snapshotStatus: "ready",
       lastSavedAt: now - 3 * 60 * 60 * 1000,
@@ -115,7 +116,7 @@ function previewSnapshot(): AppSnapshot {
       key: { environment: "cn.actual.battlenet.com.cn", accountId: "1002" },
       id: "acc-1002",
       battleTag: "国服玩家#7788",
-      region: "CN",
+      region: "国服",
       environment: "cn.actual.battlenet.com.cn",
       snapshotStatus: "ready",
       lastSavedAt: now - 26 * 60 * 60 * 1000,
@@ -125,17 +126,47 @@ function previewSnapshot(): AppSnapshot {
       key: { environment: "us.actual.battle.net", accountId: "1003" },
       id: "acc-1003",
       battleTag: "ExpiredPlayer#9012",
-      region: "US",
+      region: "美服",
       environment: "us.actual.battle.net",
       snapshotStatus: "expired",
       lastSavedAt: now - 40 * 24 * 60 * 60 * 1000,
+      note: null,
+    },
+    {
+      key: { environment: "eu.actual.battle.net", accountId: "1004" },
+      id: "acc-1004",
+      battleTag: "欧服猎人#2233",
+      region: "欧服",
+      environment: "eu.actual.battle.net",
+      snapshotStatus: "missing",
+      lastSavedAt: null,
+      note: null,
+    },
+    {
+      key: { environment: "global", accountId: "1005" },
+      id: "acc-1005",
+      battleTag: "GlobalPlayer#5566",
+      region: "国际服",
+      environment: "global",
+      snapshotStatus: "ready",
+      lastSavedAt: now - 30 * 60 * 1000,
+      note: null,
+    },
+    {
+      key: { environment: "unknown.example", accountId: "1006" },
+      id: "acc-1006",
+      battleTag: "未知区服#0000",
+      region: "未知区服",
+      environment: "unknown.example",
+      snapshotStatus: "ready",
+      lastSavedAt: now - 5 * 24 * 60 * 60 * 1000,
       note: null,
     },
   ]
 
   return {
     appName: "BnetSwitchLite",
-    version: "1.0.2",
+    version: "1.0.4",
     mode: "desktop",
     platform: "windows",
     dataDirectory: "C:\\Tools\\BnetSwitchLite\\BnetSwitchLiteData",

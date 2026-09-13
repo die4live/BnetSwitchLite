@@ -29,13 +29,23 @@ export function accountInitials(battleTag: string) {
   return characters.slice(0, length).join("").toUpperCase()
 }
 
-export type AccountAvatarTone = "mint" | "cyan" | "violet" | "rose"
+export type AccountAvatarTone =
+  "default" | "red" | "amber" | "mint" | "cyan" | "blue" | "violet" | "rose"
 
-export function accountAvatarTone(accountId: string): AccountAvatarTone {
-  const tones: AccountAvatarTone[] = ["mint", "cyan", "violet", "rose"]
-  const hash = Array.from(accountId).reduce(
-    (value, character) => (value * 31 + character.codePointAt(0)!) >>> 0,
-    0
-  )
-  return tones[hash % tones.length]
+/**
+ * 头像底色按区服固定（与后端 region_label 的枚举一一对应），
+ * 没命中的区服（含「未知区服」）回落到灰色 default。
+ */
+const REGION_TONES: Record<string, AccountAvatarTone> = {
+  国服: "red",
+  台服: "rose",
+  亚服: "amber",
+  东南亚服: "mint",
+  国际服: "cyan",
+  美服: "blue",
+  欧服: "violet",
+}
+
+export function accountRegionTone(region: string): AccountAvatarTone {
+  return REGION_TONES[region.trim()] ?? "default"
 }
