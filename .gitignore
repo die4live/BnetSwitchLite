@@ -17,6 +17,13 @@ dist-ssr
 /review/
 /src-tauri/target/
 
+# 本机全局 gitignore（~/.gitignore_global）里有 Python 模板带过来的 `lib/`，
+# 它会匹配任意层级的 lib/ 目录，把本项目的 src/lib/** 一起吃掉，导致新增文件
+# 被静默忽略（本地能过类型检查，推上去 CI 才报找不到模块）。
+# 仓库级 .gitignore 优先级高于 core.excludesFile，这里显式放行。
+!src/lib/
+!src/lib/**
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
