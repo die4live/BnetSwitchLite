@@ -8,6 +8,21 @@
 
 ---
 
+## v1.0.5 — 2026-09-20
+
+### 区服名胶囊
+
+- 账号信息行的服务器名称改为**胶囊样式**，背景色与头像**共用同一张色表**（`lib/format.ts` 的 `AVATAR_TONE_SURFACE`），因此两者永远同色、不会漂移。
+- 新增 `RegionBadge` 组件；`avatar.tsx` 的 `AvatarFallback` 同步改为查同一张表，新增区服只需改 Rust 的 `region_label` + `REGION_TONES` + CSS 变量三处，组件层不再各自硬编码。
+- 胶囊高度 17 px，嵌入信息行不撑高账号行（仍 64 px）；≤360 px 时随账号名一起隐藏，改在头像悬停提示卡里显示，反色底上保持高对比。
+
+### 重复启动提示
+
+- 单实例判定不区分版本，旧版本留在托盘时双击新 exe 会**静默不启动**（新进程直接退出，屏幕上弹出的仍是旧界面）。现改为：被唤醒的老实例弹出一条提示「已有 vX.Y.Z 在运行，请先退出」，版本号即其自身版本，一眼可辨当前跑的是哪一版。
+- Rust 单实例回调在亮窗口后 `app.emit("second-instance", version)`；前端 `bridge.ts` 订阅该事件、`App.tsx` 落成 toast。权限沿用 `core:event:default`（已含 `allow-listen`），无需改 capabilities。
+
+---
+
 ## v1.0.4 — 2026-09-13
 
 ### 窗口拖动

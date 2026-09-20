@@ -49,3 +49,21 @@ const REGION_TONES: Record<string, AccountAvatarTone> = {
 export function accountRegionTone(region: string): AccountAvatarTone {
   return REGION_TONES[region.trim()] ?? "default"
 }
+
+/**
+ * tone → 底色 / 前景色组合（深浅两套由 index.css 的 --avatar-* 变量切换）。
+ *
+ * 头像与区服胶囊共用这一张表，新增 tone 只改这里，两处不会漂移。
+ * 注意：Tailwind 靠扫描源码里的**字面量**生成工具类，所以类名必须写全，
+ * 不能写成 `bg-avatar-${tone}` 这种拼接形式。
+ */
+export const AVATAR_TONE_SURFACE: Record<AccountAvatarTone, string> = {
+  default: "bg-muted text-muted-foreground",
+  red: "bg-avatar-red text-avatar-red-foreground",
+  amber: "bg-avatar-amber text-avatar-amber-foreground",
+  mint: "bg-avatar-mint text-avatar-mint-foreground",
+  cyan: "bg-avatar-cyan text-avatar-cyan-foreground",
+  blue: "bg-avatar-blue text-avatar-blue-foreground",
+  violet: "bg-avatar-violet text-avatar-violet-foreground",
+  rose: "bg-avatar-rose text-avatar-rose-foreground",
+}

@@ -11,10 +11,15 @@ mod window_state;
 
 use commands::AppState;
 use tauri::{
-    Manager, WindowEvent,
+    Emitter, Manager, WindowEvent,
     menu::{Menu, MenuItem},
     tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
 };
+
+/// 第二个实例被单实例插件吞掉时，由「正在运行的那个实例」发给前端的通知事件。
+/// 载荷是运行中实例的版本号（取自 tauri.conf.json 的 version）。
+/// 前端监听常量在 `src/lib/bridge.ts` 的 SECOND_INSTANCE_EVENT，两处必须一致。
+pub const SECOND_INSTANCE_EVENT: &str = "second-instance";
 
 fn show_main_window(app: &tauri::AppHandle) {
     if let Some(window) = app.get_webview_window("main") {
@@ -58,8 +63,14 @@ fn setup_tray(app: &tauri::AppHandle) -> tauri::Result<()> {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        // 单实例判定只看 identifier，不带版本号（插件的 semver feature 未启用），
+        // 所以「新版本 exe」被「托盘里的旧实例」吃掉时，新进程在插件内部就 exit(0) 了。
+        // 这里跑的是**已经开始运行的那个实例**：先把窗口亮出来，再告诉界面刚才发生了什么，
+        // 否则用户双击新 exe 后屏幕上原样不动、没有任何反馈（实机踩过）。
         .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
             show_main_window(app);
+            let version = app.config().version.clone().unwrap_or_default();
+            let _ = app.emit(SECOND_INSTANCE_EVENT, version);
         }))
         .plugin(tauri_plugin_dialog::init())
         .manage(AppState::new())

@@ -2,6 +2,7 @@ import * as React from "react"
 import { Trash2, X } from "lucide-react"
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { RegionBadge } from "@/components/region-badge"
 import { Button } from "@/components/ui/button"
 import {
   Tooltip,
@@ -91,10 +92,11 @@ export function AccountRow({
           >
             {avatar}
           </TooltipTrigger>
-          <TooltipContent className="flex-col items-start gap-0.5" side="right">
+          <TooltipContent className="flex-col items-start gap-1" side="right">
             <span className="font-semibold">{account.battleTag}</span>
-            <span className="opacity-80">
-              {account.region} · {snapshotDetail}
+            <span className="flex items-center gap-1.5">
+              <RegionBadge region={account.region} />
+              <span className="opacity-80">{snapshotDetail}</span>
             </span>
           </TooltipContent>
         </Tooltip>
@@ -107,9 +109,9 @@ export function AccountRow({
         <h2 className="truncate text-sm leading-5 font-semibold">
           {account.battleTag}
         </h2>
+        {/* 胶囊自带背景边界，不要再加「·」分隔符（2026-09-13 用户要求去掉） */}
         <p className="mt-0.5 flex min-w-0 items-center gap-1.5 truncate text-xs text-muted-foreground">
-          <span>{account.region}</span>
-          <span aria-hidden="true">·</span>
+          <RegionBadge region={account.region} />
           <span
             className={cn(
               "truncate",

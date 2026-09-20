@@ -300,6 +300,35 @@ function AppContent() {
     toast.info(notice, createToastOptions())
   }, [snapshot?.notice, snapshot?.accounts.length])
 
+  // 已经有一个实例在运行时再启动一次，新进程会被单实例插件直接结束、界面毫无变化。
+  // 这里把「运行中的那个实例」发来的通知落成 toast，用户才知道该先退出再启动新版本。
+  React.useEffect(() => {
+    let disposed = false
+    let unlisten: (() => void) | null = null
+    appBridge
+      .onSecondInstance((runningVersion) => {
+        // 文案长度受 toast 的 40px 定高限制（窗口缩到 180px 时只放得下 2 行、约 18 字），
+        // 实测「已有 v1.0.3 在运行，请先退出」是刚好完整显示的上限，别再往长里写。
+        toast.info(
+          runningVersion
+            ? `已有 v${runningVersion} 在运行，请先退出`
+            : "战网切号器已在运行，请先退出",
+          createToastOptions(ATTENTION_TOAST_DURATION)
+        )
+      })
+      .then((stop) => {
+        if (disposed) stop()
+        else unlisten = stop
+      })
+      .catch((error: unknown) => {
+        console.error("无法监听重复启动通知", error)
+      })
+    return () => {
+      disposed = true
+      unlisten?.()
+    }
+  }, [])
+
   if (controller.loading) {
     return <AppSkeleton operation={controller.operation} />
   }

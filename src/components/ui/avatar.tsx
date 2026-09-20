@@ -3,6 +3,7 @@
 import * as React from "react"
 import { Avatar as AvatarPrimitive } from "@base-ui/react/avatar"
 
+import { AVATAR_TONE_SURFACE, type AccountAvatarTone } from "@/lib/format"
 import { cn } from "@/lib/utils"
 
 function Avatar({
@@ -43,16 +44,8 @@ function AvatarFallback({
   tone = "default",
   ...props
 }: AvatarPrimitive.Fallback.Props & {
-  tone?:
-    | "default"
-    | "primary"
-    | "red"
-    | "amber"
-    | "mint"
-    | "cyan"
-    | "blue"
-    | "violet"
-    | "rose"
+  // 与区服胶囊共用 tone 表（AVATAR_TONE_SURFACE），primary 是头像独有的一种
+  tone?: AccountAvatarTone | "primary"
 }) {
   return (
     <AvatarPrimitive.Fallback
@@ -60,14 +53,9 @@ function AvatarFallback({
       data-tone={tone}
       className={cn(
         "flex size-full items-center justify-center rounded-full bg-muted text-sm font-semibold text-muted-foreground group-data-[size=sm]/avatar:text-xs",
-        tone === "primary" && "bg-primary/8 text-primary",
-        tone === "red" && "bg-avatar-red text-avatar-red-foreground",
-        tone === "amber" && "bg-avatar-amber text-avatar-amber-foreground",
-        tone === "mint" && "bg-avatar-mint text-avatar-mint-foreground",
-        tone === "cyan" && "bg-avatar-cyan text-avatar-cyan-foreground",
-        tone === "blue" && "bg-avatar-blue text-avatar-blue-foreground",
-        tone === "violet" && "bg-avatar-violet text-avatar-violet-foreground",
-        tone === "rose" && "bg-avatar-rose text-avatar-rose-foreground",
+        tone === "primary"
+          ? "bg-primary/8 text-primary"
+          : AVATAR_TONE_SURFACE[tone],
         className
       )}
       {...props}

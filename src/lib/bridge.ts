@@ -1,4 +1,5 @@
 import { Channel, invoke, isTauri } from "@tauri-apps/api/core"
+import { listen, type UnlistenFn } from "@tauri-apps/api/event"
 
 import type {
   AccountKey,
@@ -11,6 +12,13 @@ import type {
 } from "@/lib/types"
 
 type EventHandler = (event: OperationEvent) => void
+
+/** 与 `src-tauri/src/lib.rs` 的 SECOND_INSTANCE_EVENT 必须一致 */
+const SECOND_INSTANCE_EVENT = "second-instance"
+/** 浏览器预览模式下模拟「第二次启动」的 DOM 事件名，仅用于本地检查提示文案 */
+const PREVIEW_SECOND_INSTANCE_EVENT = "bnetswitchlite:second-instance"
+
+type SecondInstanceHandler = (runningVersion: string) => void
 
 function serializeLoginIntent(intent: LoginIntent): LoginIntent {
   return {
@@ -71,6 +79,16 @@ const desktopBridge = {
   setClientPath: (executablePath: string) =>
     call<AppSnapshot>("set_client_path", { executablePath }),
   openClient: () => call<AppSnapshot>("open_client"),
+  /**
+   * 用户在已运行时又启动了一次（第二次启动的新进程会被单实例插件直接结束）。
+   * 参数是**正在运行的这个实例**的版本号——用户据此就能看出屏幕上是旧版本。
+   */
+  onSecondInstance: (handler: SecondInstanceHandler): Promise<UnlistenFn> => {
+    requireDesktop()
+    return listen<string>(SECOND_INSTANCE_EVENT, (event) =>
+      handler(event.payload)
+    )
+  },
   pickClientExecutable: async (
     currentPath: string,
     platform: AppSnapshot["platform"]
@@ -217,6 +235,16 @@ const browserPreviewBridge: typeof desktopBridge = {
   removeAccount: () => Promise.resolve(previewSnapshot()),
   setClientPath: () => Promise.resolve(previewSnapshot()),
   openClient: () => Promise.resolve(previewSnapshot()),
+  // 预览模式没有 Tauri 事件总线，用 window 事件顶替，方便在浏览器里看提示文案/排版：
+  //   window.dispatchEvent(new CustomEvent("bnetswitchlite:second-instance", { detail: "1.0.3" }))
+  onSecondInstance: (handler) => {
+    const onPreviewEvent = (event: Event) =>
+      handler(String((event as CustomEvent<string>).detail ?? ""))
+    window.addEventListener(PREVIEW_SECOND_INSTANCE_EVENT, onPreviewEvent)
+    return Promise.resolve(() =>
+      window.removeEventListener(PREVIEW_SECOND_INSTANCE_EVENT, onPreviewEvent)
+    )
+  },
   pickClientExecutable: () => Promise.resolve(null),
 }
 
